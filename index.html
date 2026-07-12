@@ -214,7 +214,7 @@
       <div class="content">
         <div class="toolbar">
           <div><h3 id="historyTitle">Tous les horaires</h3><div class="person-total" id="personTotal" hidden></div><div class="filter"><span>Période</span><select id="periodFilter"><option value="all">Tout</option><option value="month" selected>Ce mois</option><option value="week">Cette semaine</option></select></div></div>
-          <div class="toolbar-actions"><button class="button secondary" id="backupBtn">Sauvegarder</button><button class="button ghost" id="restoreBtn">Restaurer</button><input type="file" id="restoreFile" accept="application/json,.json" hidden><button class="button ghost" id="exportBtn">Exporter CSV</button><button class="button primary" id="addShiftBtn">+ Ajouter des heures</button></div>
+          <div class="toolbar-actions"><button class="button secondary" id="backupBtn">Sauvegarder</button><button class="button ghost" id="shareBtn">Partager</button><button class="button primary" id="addShiftBtn">+ Ajouter des heures</button></div>
         </div>
         <div class="card table-wrap">
           <table>
@@ -374,12 +374,6 @@
       save(); closeModal('shiftModal'); showToast(i >= 0 ? 'Horaire modifié' : 'Heures enregistrées');
     });
 
-    document.getElementById('exportBtn').addEventListener('click', () => {
-      const rows = [['Employé','Date','Début','Fin','Pause (min)','Durée (heures)'], ...state.shifts.sort((a,b) => a.date.localeCompare(b.date)).map(s => [employeeById(s.employeeId)?.name || '', s.date, s.start, s.end, s.breakMinutes || 0, (duration(s)/60).toFixed(2).replace('.',',')])];
-      const csv = '\ufeff' + rows.map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(';')).join('\r\n');
-      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download = `horaires-${localISO()}.csv`; a.click(); URL.revokeObjectURL(a.href); showToast('Fichier CSV exporté');
-    });
-
     document.getElementById('backupBtn').addEventListener('click', () => {
       const backup = { application: 'Brasserie De La Place', version: 1, createdAt: new Date().toISOString(), data: state };
       const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
@@ -387,20 +381,16 @@
       setTimeout(() => URL.revokeObjectURL(a.href), 1000); showToast('Sauvegarde créée — prête pour OneDrive et Gmail');
     });
 
-    document.getElementById('restoreBtn').addEventListener('click', () => document.getElementById('restoreFile').click());
-    document.getElementById('restoreFile').addEventListener('change', event => {
-      const file = event.target.files?.[0]; if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        try {
-          const backup = JSON.parse(reader.result); const restored = backup.data || backup;
-          if (!Array.isArray(restored.employees) || !Array.isArray(restored.shifts)) throw new Error('format');
-          if (!confirm('Restaurer cette sauvegarde ? Les données actuelles seront remplacées.')) return;
-          state = restored; selectedEmployee = state.employees[0]?.id || 'all'; save(); showToast('Sauvegarde restaurée');
-        } catch (_) { alert('Ce fichier de sauvegarde n’est pas valide.'); }
-        event.target.value = '';
-      };
-      reader.readAsText(file);
+    document.getElementById('shareBtn').addEventListener('click', async () => {
+      const backup = { application: 'Brasserie De La Place', version: 1, createdAt: new Date().toISOString(), data: state };
+      const file = new File([JSON.stringify(backup, null, 2)], `sauvegarde-brasserie-${localISO()}.json`, {type:'application/json'});
+      if (navigator.share && navigator.canShare?.({files:[file]})) {
+        try { await navigator.share({title:'Horaires — Brasserie De La Place', text:'Sauvegarde des employés et des heures', files:[file]}); showToast('Fichier partagé'); }
+        catch (error) { if (error.name !== 'AbortError') alert('Le partage n’a pas fonctionné sur cet appareil.'); }
+      } else {
+        const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000); showToast('Fichier téléchargé — vous pouvez maintenant le partager');
+      }
     });
 
     window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; });
