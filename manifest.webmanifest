@@ -1,0 +1,20 @@
+{
+  "name": "Brasserie De La Place — Gestion des horaires",
+  "short_name": "Brasserie",
+  "description": "Gestion des employés, horaires et heures cumulées de la Brasserie De La Place.",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f1e9",
+  "theme_color": "#17362e",
+  "icons": [
+    {
+      "src": "brasserie-logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

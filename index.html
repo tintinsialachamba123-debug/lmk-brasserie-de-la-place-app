@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17362e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Brasserie De La Place">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="brasserie-logo.png">
+  <title>Brasserie De La Place — Gestion des horaires</title>
+  <style>
+    :root {
+      --ink: #18201d;
+      --muted: #69736f;
+      --paper: #f4f1e9;
+      --card: #fffdf8;
+      --line: #dedbd2;
+      --green: #17362e;
+      --green-2: #28594b;
+      --mint: #dfece6;
+      --gold: #e3b65a;
+      --danger: #a94036;
+      --shadow: 0 16px 40px rgba(23, 54, 46, .10);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(227,182,90,.18), transparent 28rem),
+        var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .shell { max-width: 1240px; margin: 0 auto; padding: 28px 24px 48px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 28px; }
+    .top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .logo {
+      width: 48px; height: 48px; border-radius: 15px; display: grid; place-items: center;
+      color: white; background: var(--green); box-shadow: 0 10px 25px rgba(23,54,46,.22);
+    }
+    .logo span { font-size: 13px; font-weight: 900; letter-spacing: .06em; }
+    .brand h1 { font-family: Georgia, serif; font-size: 24px; line-height: 1; margin: 0 0 5px; }
+    .brand p { color: var(--muted); margin: 0; font-size: 13px; }
+
+    .button {
+      border: 0; border-radius: 12px; padding: 11px 15px; font-weight: 750;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      transition: transform .15s, background .15s, box-shadow .15s;
+    }
+    .button:hover { transform: translateY(-1px); }
+    .button.primary { color: white; background: var(--green); box-shadow: 0 8px 18px rgba(23,54,46,.18); }
+    .button.primary:hover { background: var(--green-2); }
+    .button.secondary { color: var(--green); background: var(--mint); }
+    .button.ghost { color: var(--ink); background: transparent; border: 1px solid var(--line); }
+    .button.danger { color: var(--danger); background: #f8e8e5; }
+    .button.small { padding: 8px 10px; font-size: 13px; }
+
+    .hero {
+      overflow: hidden; position: relative; display: grid; grid-template-columns: 1.3fr .7fr;
+      min-height: 245px; border-radius: 28px; padding: 38px 42px; color: white; background: var(--green);
+      box-shadow: var(--shadow); margin-bottom: 24px;
+    }
+    .hero::after {
+      content: ""; position: absolute; width: 330px; height: 330px; border-radius: 50%;
+      right: -85px; top: -160px; border: 58px solid rgba(255,255,255,.07);
+    }
+    .hero::before {
+      content: ""; position: absolute; inset: 0;
+      background: url('brasserie-logo.png') no-repeat 84% center / 340px;
+      opacity: .16; filter: grayscale(1); pointer-events: none;
+    }
+    .hero-copy { align-self: center; position: relative; z-index: 1; }
+    .eyebrow { color: #bcd2c9; text-transform: uppercase; letter-spacing: .14em; font-size: 11px; font-weight: 850; }
+    .hero h2 { font-family: Georgia, serif; font-weight: 500; max-width: 700px; font-size: clamp(32px, 4.5vw, 52px); line-height: 1.02; margin: 10px 0 15px; }
+    .hero p { max-width: 570px; color: #cbd9d4; line-height: 1.55; margin: 0; }
+    .hero-clock { align-self: center; justify-self: end; text-align: right; position: relative; z-index: 1; }
+    .hero-clock strong { display: block; font: 500 clamp(42px, 6vw, 72px)/1 Georgia, serif; color: var(--gold); }
+    .hero-clock span { display: block; color: #cbd9d4; margin-top: 8px; text-transform: capitalize; }
+
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat { background: var(--card); border: 1px solid rgba(222,219,210,.8); border-radius: 18px; padding: 20px 22px; }
+    .stat-label { color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+    .stat-value { margin-top: 8px; font: 500 31px/1.1 Georgia, serif; color: var(--green); }
+
+    .grid { display: grid; grid-template-columns: 330px 1fr; gap: 24px; align-items: start; }
+    .card { background: var(--card); border: 1px solid rgba(222,219,210,.9); border-radius: var(--radius); box-shadow: 0 10px 30px rgba(23,54,46,.05); }
+    .card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 20px 22px 15px; }
+    .card-head h3 { margin: 0; font: 600 22px/1.2 Georgia, serif; }
+    .card-head p { color: var(--muted); margin: 4px 0 0; font-size: 13px; }
+    .employee-list { padding: 0 12px 14px; display: grid; gap: 6px; }
+    .employee {
+      width: 100%; display: grid; grid-template-columns: 1fr 30px; gap: 6px; align-items: center;
+      border-radius: 14px; padding: 7px; background: transparent; color: var(--ink);
+    }
+    .employee:hover, .employee.active { background: var(--mint); }
+    .employee-info { min-width: 0; display: grid; grid-template-columns: 38px 1fr auto; gap: 11px; align-items: center; text-align: left; border: 0; padding: 3px; background: transparent; color: var(--ink); }
+    .employee-remove { width: 30px; height: 30px; border: 0; border-radius: 9px; color: var(--muted); background: transparent; font-size: 19px; line-height: 1; }
+    .employee-remove:hover { color: var(--danger); background: #f8e8e5; }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: white; font-weight: 850; font-size: 13px; }
+    .employee-name { display: block; font-weight: 780; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .employee-hours { display: block; font-size: 12px; color: var(--muted); }
+    .employee-total { color: var(--green); font-weight: 850; font-variant-numeric: tabular-nums; }
+    .empty { padding: 28px; text-align: center; color: var(--muted); }
+
+    .content { min-width: 0; }
+    .toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .toolbar h3 { margin: 0; font: 600 27px/1.2 Georgia, serif; }
+    .person-total { display: inline-flex; align-items: center; gap: 7px; margin: 8px 0 5px; padding: 7px 10px; border-radius: 10px; color: var(--green); background: var(--mint); font-size: 13px; font-weight: 850; }
+    .toolbar-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 13px; }
+    select, input {
+      width: 100%; color: var(--ink); background: white; border: 1px solid var(--line); border-radius: 11px;
+      padding: 11px 12px; outline: none; transition: border-color .15s, box-shadow .15s;
+    }
+    select:focus, input:focus { border-color: var(--green-2); box-shadow: 0 0 0 3px rgba(40,89,75,.11); }
+    .filter select { width: auto; padding: 8px 34px 8px 10px; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 650px; }
+    th { color: var(--muted); text-align: left; text-transform: uppercase; letter-spacing: .07em; font-size: 11px; padding: 13px 18px; border-bottom: 1px solid var(--line); }
+    td { padding: 15px 18px; border-bottom: 1px solid #ece9e1; font-size: 14px; }
+    tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: #faf8f2; }
+    .date-main { font-weight: 750; }
+    .date-sub { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+    .time-pill { display: inline-block; background: var(--mint); color: var(--green); border-radius: 8px; padding: 5px 8px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .duration { font-weight: 850; color: var(--green); font-variant-numeric: tabular-nums; }
+    .row-actions { display: flex; justify-content: flex-end; gap: 5px; }
+    .icon-btn { width: 32px; height: 32px; border: 0; border-radius: 9px; background: #f1efe8; color: var(--muted); }
+    .icon-btn:hover { color: var(--green); background: var(--mint); }
+    .icon-btn.delete:hover { color: var(--danger); background: #f8e8e5; }
+
+    .modal-backdrop { position: fixed; inset: 0; z-index: 20; background: rgba(9,25,21,.58); display: none; place-items: center; padding: 20px; backdrop-filter: blur(4px); }
+    .modal-backdrop.open { display: grid; }
+    .modal { width: min(520px, 100%); max-height: calc(100vh - 40px); overflow: auto; background: var(--card); border-radius: 24px; box-shadow: 0 30px 80px rgba(0,0,0,.25); }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 23px 25px 13px; }
+    .modal-head h3 { font: 600 25px/1.2 Georgia, serif; margin: 0; }
+    .close { border: 0; background: #efede6; border-radius: 50%; width: 35px; height: 35px; font-size: 20px; }
+    form { padding: 8px 25px 25px; }
+    .field { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 7px; font-size: 12px; font-weight: 850; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 22px; }
+    .hint { color: var(--muted); font-size: 12px; margin-top: 6px; }
+    .toast { position: fixed; z-index: 30; left: 50%; bottom: 24px; transform: translate(-50%, 100px); opacity: 0; color: white; background: var(--green); border-radius: 12px; padding: 12px 17px; box-shadow: var(--shadow); transition: .25s; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 820px) {
+      .hero { grid-template-columns: 1fr; padding: 30px; }
+      .hero-clock { justify-self: start; text-align: left; margin-top: 25px; }
+      .grid { grid-template-columns: 1fr; }
+      .employee-list { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 560px) {
+      .shell { padding: 18px 14px 35px; }
+      .topbar { align-items: flex-start; }
+      .brand p { display: none; }
+      .hero { padding: 27px 23px; border-radius: 22px; }
+      .hero h2 { font-size: 35px; }
+      .hero-clock strong { font-size: 46px; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .stats .stat:last-child { grid-column: span 2; }
+      .stat { padding: 16px; }
+      .stat-value { font-size: 25px; }
+      .employee-list { grid-template-columns: 1fr; }
+      .toolbar { align-items: flex-start; }
+      .toolbar-actions { width: 100%; }
+      .toolbar-actions .button { flex: 1; }
+      .form-row { grid-template-columns: 1fr; gap: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo" aria-label="LMK"><span>LMK</span></div>
+        <div><h1>Brasserie De La Place</h1><p>Gestion simple des horaires de l’équipe</p></div>
+      </div>
+      <div class="top-actions"><button class="button ghost" id="installBtn">Installer l’application</button><button class="button secondary" id="addEmployeeBtn">+ Employé</button></div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">Tableau de bord</div>
+        <h2>Les heures de toute l’équipe, au même endroit.</h2>
+        <p>Ajoutez les horaires de début et de fin. Les durées et les cumuls sont calculés automatiquement.</p>
+      </div>
+      <div class="hero-clock"><strong id="liveTime">--:--</strong><span id="liveDate">—</span></div>
+    </section>
+
+    <section class="stats" aria-label="Résumé">
+      <div class="stat"><div class="stat-label">Employés</div><div class="stat-value" id="employeeCount">0</div></div>
+      <div class="stat"><div class="stat-label">Heures ce mois</div><div class="stat-value" id="monthHours">0 h</div></div>
+      <div class="stat"><div class="stat-label">Heures au total</div><div class="stat-value" id="allHours">0 h</div></div>
+    </section>
+
+    <section class="grid">
+      <aside class="card">
+        <div class="card-head"><div><h3>L’équipe</h3><p>Total cumulé par personne</p></div></div>
+        <div class="employee-list" id="employeeList"></div>
+      </aside>
+
+      <div class="content">
+        <div class="toolbar">
+          <div><h3 id="historyTitle">Tous les horaires</h3><div class="person-total" id="personTotal" hidden></div><div class="filter"><span>Période</span><select id="periodFilter"><option value="all">Tout</option><option value="month" selected>Ce mois</option><option value="week">Cette semaine</option></select></div></div>
+          <div class="toolbar-actions"><button class="button secondary" id="backupBtn">Sauvegarder</button><button class="button ghost" id="restoreBtn">Restaurer</button><input type="file" id="restoreFile" accept="application/json,.json" hidden><button class="button ghost" id="exportBtn">Exporter CSV</button><button class="button primary" id="addShiftBtn">+ Ajouter des heures</button></div>
+        </div>
+        <div class="card table-wrap">
+          <table>
+            <thead><tr><th>Employé</th><th>Date</th><th>Début</th><th>Fin</th><th>Pause</th><th>Durée</th><th></th></tr></thead>
+            <tbody id="shiftRows"></tbody>
+          </table>
+          <div class="empty" id="shiftEmpty" hidden>Aucun horaire pour cette période.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="employeeModal" role="dialog" aria-modal="true" aria-labelledby="employeeModalTitle">
+    <div class="modal"><div class="modal-head"><h3 id="employeeModalTitle">Ajouter un employé</h3><button class="close" data-close="employeeModal" aria-label="Fermer">×</button></div>
+      <form id="employeeForm"><div class="field"><label for="employeeName">Nom complet</label><input id="employeeName" required maxlength="60" autocomplete="name" placeholder="Ex. Marie Dupont"></div><div class="form-actions"><button type="button" class="button ghost" data-close="employeeModal">Annuler</button><button class="button primary" type="submit">Ajouter</button></div></form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="shiftModal" role="dialog" aria-modal="true" aria-labelledby="shiftModalTitle">
+    <div class="modal"><div class="modal-head"><h3 id="shiftModalTitle">Ajouter des heures</h3><button class="close" data-close="shiftModal" aria-label="Fermer">×</button></div>
+      <form id="shiftForm">
+        <input type="hidden" id="shiftId">
+        <div class="field"><label for="shiftEmployee">Employé</label><select id="shiftEmployee" required></select></div>
+        <div class="field"><label for="shiftDate">Date</label><input type="date" id="shiftDate" required></div>
+        <div class="form-row">
+          <div class="field"><label for="startTime">Heure de début</label><input type="time" id="startTime" required></div>
+          <div class="field"><label for="endTime">Heure de fin</label><input type="time" id="endTime" required></div>
+        </div>
+        <div class="field"><label for="breakMinutes">Pause non travaillée (minutes)</label><input type="number" id="breakMinutes" min="0" max="720" step="5" value="0"><div class="hint">Pour un horaire de nuit, indiquez une heure de fin plus petite que l’heure de début.</div></div>
+        <div class="form-actions"><button type="button" class="button ghost" data-close="shiftModal">Annuler</button><button class="button primary" type="submit">Enregistrer</button></div>
+      </form>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const STORAGE_KEY = 'mes-heures-v1';
+    const colors = ['#28594b','#a2673b','#446b87','#7a597b','#98604b','#56704b'];
+    let state = load();
+    let selectedEmployee = state.employees[0]?.id || 'all';
+    let installPrompt = null;
+
+    function load() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (saved?.employees && saved?.shifts) return saved;
+      } catch (_) {}
+      return { employees: [], shifts: [] };
+    }
+    function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); render(); }
+    function id() { return crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2); }
+    function localISO(date = new Date()) { const o = date.getTimezoneOffset(); return new Date(date.getTime() - o * 60000).toISOString().slice(0,10); }
+    function initials(name) { return name.trim().split(/\s+/).slice(0,2).map(p => p[0]?.toUpperCase()).join(''); }
+    function minutesOf(t) { const [h,m] = t.split(':').map(Number); return h * 60 + m; }
+    function duration(s) { let mins = minutesOf(s.end) - minutesOf(s.start); if (mins < 0) mins += 1440; return Math.max(0, mins - Number(s.breakMinutes || 0)); }
+    function formatDuration(mins) { const h = Math.floor(mins / 60); const m = mins % 60; return m ? `${h} h ${String(m).padStart(2,'0')}` : `${h} h`; }
+    function formatDecimal(mins) { return (mins / 60).toLocaleString('fr-FR', {maximumFractionDigits: 1}) + ' h'; }
+    function employeeById(empId) { return state.employees.find(e => e.id === empId); }
+    function employeeMinutes(empId) { return state.shifts.filter(s => s.employeeId === empId).reduce((n,s) => n + duration(s), 0); }
+    function escapeHTML(value) { const d = document.createElement('div'); d.textContent = value ?? ''; return d.innerHTML; }
+    function startOfWeek(now) { const d = new Date(now); const day = d.getDay() || 7; d.setHours(0,0,0,0); d.setDate(d.getDate() - day + 1); return d; }
+    function inPeriod(s, period) {
+      if (period === 'all') return true;
+      const date = new Date(s.date + 'T12:00:00'); const now = new Date();
+      if (period === 'month') return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+      const nextWeek = startOfWeek(now); nextWeek.setDate(nextWeek.getDate() + 7);
+      return date >= startOfWeek(now) && date < nextWeek;
+    }
+
+    function render() {
+      document.getElementById('employeeCount').textContent = state.employees.length;
+      const total = state.shifts.reduce((n,s) => n + duration(s), 0);
+      const month = state.shifts.filter(s => inPeriod(s, 'month')).reduce((n,s) => n + duration(s), 0);
+      document.getElementById('allHours').textContent = formatDecimal(total);
+      document.getElementById('monthHours').textContent = formatDecimal(month);
+      renderEmployees(); renderShifts(); fillEmployeeSelect();
+    }
+
+    function renderEmployees() {
+      const root = document.getElementById('employeeList');
+      if (!state.employees.length) { root.innerHTML = '<div class="empty">Ajoutez votre premier employé.</div>'; return; }
+      if (selectedEmployee === 'all') selectedEmployee = state.employees[0].id;
+      root.innerHTML = state.employees.map((e,i) => `<div class="employee ${selectedEmployee === e.id ? 'active' : ''}"><button class="employee-info" data-employee="${e.id}"><span class="avatar" style="background:${colors[i % colors.length]}">${escapeHTML(initials(e.name))}</span><span><span class="employee-name">${escapeHTML(e.name)}</span><span class="employee-hours">Total cumulé</span></span><span class="employee-total">${formatDecimal(employeeMinutes(e.id))}</span></button><button class="employee-remove" data-delete-employee="${e.id}" title="Supprimer ${escapeHTML(e.name)}" aria-label="Supprimer ${escapeHTML(e.name)}">×</button></div>`).join('');
+      root.querySelectorAll('[data-employee]').forEach(btn => btn.addEventListener('click', () => { selectedEmployee = btn.dataset.employee; render(); }));
+      root.querySelectorAll('[data-delete-employee]').forEach(btn => btn.addEventListener('click', () => deleteEmployee(btn.dataset.deleteEmployee)));
+    }
+
+    function renderShifts() {
+      const period = document.getElementById('periodFilter').value;
+      const emp = selectedEmployee === 'all' ? null : employeeById(selectedEmployee);
+      document.getElementById('historyTitle').textContent = emp ? `Horaires de ${emp.name}` : 'Tous les horaires';
+      const personTotal = document.getElementById('personTotal');
+      personTotal.hidden = !emp;
+      personTotal.textContent = emp ? `Total cumulé : ${formatDuration(employeeMinutes(emp.id))}` : '';
+      const shifts = [...state.shifts].filter(s => (selectedEmployee === 'all' || s.employeeId === selectedEmployee) && inPeriod(s, period)).sort((a,b) => b.date.localeCompare(a.date) || b.start.localeCompare(a.start));
+      const root = document.getElementById('shiftRows'); const empty = document.getElementById('shiftEmpty');
+      empty.hidden = shifts.length > 0; root.innerHTML = shifts.map(s => {
+        const e = employeeById(s.employeeId); const date = new Date(s.date + 'T12:00:00');
+        const day = date.toLocaleDateString('fr-FR',{weekday:'long'}); const main = date.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+        return `<tr><td><strong>${escapeHTML(e?.name || 'Employé supprimé')}</strong></td><td><span class="date-main">${main}</span><span class="date-sub">${day}</span></td><td><span class="time-pill">${s.start}</span></td><td><span class="time-pill">${s.end}</span></td><td>${Number(s.breakMinutes || 0)} min</td><td><span class="duration">${formatDuration(duration(s))}</span></td><td><div class="row-actions"><button class="icon-btn" title="Modifier" data-edit="${s.id}">✎</button><button class="icon-btn delete" title="Supprimer" data-delete="${s.id}">×</button></div></td></tr>`;
+      }).join('');
+      root.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openShift(b.dataset.edit)));
+      root.querySelectorAll('[data-delete]').forEach(b => b.addEventListener('click', () => deleteShift(b.dataset.delete)));
+    }
+
+    function fillEmployeeSelect() {
+      const select = document.getElementById('shiftEmployee'); const current = select.value;
+      select.innerHTML = state.employees.length ? state.employees.map(e => `<option value="${e.id}">${escapeHTML(e.name)}</option>`).join('') : '<option value="">Ajoutez d’abord un employé</option>';
+      if (state.employees.some(e => e.id === current)) select.value = current;
+      else if (selectedEmployee !== 'all' && state.employees.some(e => e.id === selectedEmployee)) select.value = selectedEmployee;
+    }
+
+    function openModal(name) { document.getElementById(name).classList.add('open'); setTimeout(() => document.querySelector(`#${name} input:not([type=hidden]), #${name} select`)?.focus(), 30); }
+    function closeModal(name) { document.getElementById(name).classList.remove('open'); }
+    function openShift(shiftId = '') {
+      if (!state.employees.length) { showToast('Ajoutez d’abord un employé'); openModal('employeeModal'); return; }
+      const s = state.shifts.find(x => x.id === shiftId);
+      document.getElementById('shiftModalTitle').textContent = s ? 'Modifier les heures' : 'Ajouter des heures';
+      document.getElementById('shiftId').value = s?.id || '';
+      fillEmployeeSelect();
+      document.getElementById('shiftEmployee').value = s?.employeeId || (selectedEmployee !== 'all' ? selectedEmployee : state.employees[0].id);
+      document.getElementById('shiftDate').value = s?.date || localISO();
+      document.getElementById('startTime').value = s?.start || '08:00';
+      document.getElementById('endTime').value = s?.end || '17:00';
+      document.getElementById('breakMinutes').value = s?.breakMinutes ?? 0;
+      openModal('shiftModal');
+    }
+    function deleteShift(shiftId) { if (confirm('Supprimer cet horaire ?')) { state.shifts = state.shifts.filter(s => s.id !== shiftId); save(); showToast('Horaire supprimé'); } }
+    function deleteEmployee(employeeId) {
+      const employee = employeeById(employeeId); if (!employee) return;
+      const shiftCount = state.shifts.filter(s => s.employeeId === employeeId).length;
+      const detail = shiftCount ? ` Ses ${shiftCount} horaire${shiftCount > 1 ? 's' : ''} seront également supprimés.` : '';
+      if (!confirm(`Supprimer ${employee.name} de l’équipe ?${detail}`)) return;
+      state.employees = state.employees.filter(e => e.id !== employeeId);
+      state.shifts = state.shifts.filter(s => s.employeeId !== employeeId);
+      selectedEmployee = state.employees[0]?.id || 'all'; save(); showToast(`${employee.name} a été supprimé`);
+    }
+    function showToast(message) { const t = document.getElementById('toast'); t.textContent = message; t.classList.add('show'); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => t.classList.remove('show'), 2200); }
+
+    document.getElementById('addEmployeeBtn').addEventListener('click', () => { document.getElementById('employeeForm').reset(); openModal('employeeModal'); });
+    document.getElementById('addShiftBtn').addEventListener('click', () => openShift());
+    document.getElementById('periodFilter').addEventListener('change', renderShifts);
+    document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeModal(b.dataset.close)));
+    document.querySelectorAll('.modal-backdrop').forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); }));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.open').forEach(m => closeModal(m.id)); });
+
+    document.getElementById('employeeForm').addEventListener('submit', e => {
+      e.preventDefault(); const name = document.getElementById('employeeName').value.trim(); if (!name) return;
+      state.employees.push({id:id(), name}); save(); closeModal('employeeModal'); showToast(`${name} a été ajouté`);
+    });
+    document.getElementById('shiftForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const shift = { id: document.getElementById('shiftId').value || id(), employeeId: document.getElementById('shiftEmployee').value, date: document.getElementById('shiftDate').value, start: document.getElementById('startTime').value, end: document.getElementById('endTime').value, breakMinutes: Number(document.getElementById('breakMinutes').value || 0) };
+      if (!shift.employeeId || !shift.date || !shift.start || !shift.end) return;
+      if (duration(shift) <= 0) { alert('La durée doit être supérieure à zéro après déduction de la pause.'); return; }
+      const i = state.shifts.findIndex(s => s.id === shift.id); if (i >= 0) state.shifts[i] = shift; else state.shifts.push(shift);
+      save(); closeModal('shiftModal'); showToast(i >= 0 ? 'Horaire modifié' : 'Heures enregistrées');
+    });
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const rows = [['Employé','Date','Début','Fin','Pause (min)','Durée (heures)'], ...state.shifts.sort((a,b) => a.date.localeCompare(b.date)).map(s => [employeeById(s.employeeId)?.name || '', s.date, s.start, s.end, s.breakMinutes || 0, (duration(s)/60).toFixed(2).replace('.',',')])];
+      const csv = '\ufeff' + rows.map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(';')).join('\r\n');
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'})); a.download = `horaires-${localISO()}.csv`; a.click(); URL.revokeObjectURL(a.href); showToast('Fichier CSV exporté');
+    });
+
+    document.getElementById('backupBtn').addEventListener('click', () => {
+      const backup = { application: 'Brasserie De La Place', version: 1, createdAt: new Date().toISOString(), data: state };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `sauvegarde-brasserie-${localISO()}.json`; a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000); showToast('Sauvegarde créée — prête pour OneDrive et Gmail');
+    });
+
+    document.getElementById('restoreBtn').addEventListener('click', () => document.getElementById('restoreFile').click());
+    document.getElementById('restoreFile').addEventListener('change', event => {
+      const file = event.target.files?.[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const backup = JSON.parse(reader.result); const restored = backup.data || backup;
+          if (!Array.isArray(restored.employees) || !Array.isArray(restored.shifts)) throw new Error('format');
+          if (!confirm('Restaurer cette sauvegarde ? Les données actuelles seront remplacées.')) return;
+          state = restored; selectedEmployee = state.employees[0]?.id || 'all'; save(); showToast('Sauvegarde restaurée');
+        } catch (_) { alert('Ce fichier de sauvegarde n’est pas valide.'); }
+        event.target.value = '';
+      };
+      reader.readAsText(file);
+    });
+
+    window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; });
+    window.addEventListener('appinstalled', () => { installPrompt = null; showToast('Application installée'); });
+    document.getElementById('installBtn').addEventListener('click', async () => {
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) { showToast('L’application est déjà installée'); return; }
+      if (installPrompt) { installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; return; }
+      const isiPhone = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      if (isiPhone) alert('Sur iPhone : appuyez sur Partager, puis « Sur l’écran d’accueil ».');
+      else alert('Ouvrez l’application depuis son adresse Internet sécurisée, puis choisissez « Installer l’application » dans le menu du navigateur.');
+    });
+
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js');
+
+    function tick() { const n = new Date(); document.getElementById('liveTime').textContent = n.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); document.getElementById('liveDate').textContent = n.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}); }
+    tick(); setInterval(tick, 30000); render();
+  </script>
+</body>
+</html>
