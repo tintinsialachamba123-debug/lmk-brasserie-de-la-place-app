@@ -214,7 +214,7 @@
       <div class="content">
         <div class="toolbar">
           <div><h3 id="historyTitle">Tous les horaires</h3><div class="person-total" id="personTotal" hidden></div><div class="filter"><span>Période</span><select id="periodFilter"><option value="all">Tout</option><option value="month" selected>Ce mois</option><option value="week">Cette semaine</option></select></div></div>
-          <div class="toolbar-actions"><button class="button secondary" id="backupBtn">Sauvegarder</button><button class="button ghost" id="shareBtn">Partager</button><button class="button primary" id="addShiftBtn">+ Ajouter des heures</button></div>
+          <div class="toolbar-actions"><button class="button secondary" id="backupBtn">Sauvegarder</button><button class="button primary" id="addShiftBtn">+ Ajouter des heures</button></div>
         </div>
         <div class="card table-wrap">
           <table>
@@ -379,18 +379,6 @@
       const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `sauvegarde-brasserie-${localISO()}.json`; a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000); showToast('Sauvegarde créée — prête pour OneDrive et Gmail');
-    });
-
-    document.getElementById('shareBtn').addEventListener('click', async () => {
-      const backup = { application: 'Brasserie De La Place', version: 1, createdAt: new Date().toISOString(), data: state };
-      const file = new File([JSON.stringify(backup, null, 2)], `sauvegarde-brasserie-${localISO()}.json`, {type:'application/json'});
-      if (navigator.share && navigator.canShare?.({files:[file]})) {
-        try { await navigator.share({title:'Horaires — Brasserie De La Place', text:'Sauvegarde des employés et des heures', files:[file]}); showToast('Fichier partagé'); }
-        catch (error) { if (error.name !== 'AbortError') alert('Le partage n’a pas fonctionné sur cet appareil.'); }
-      } else {
-        const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = file.name; a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 1000); showToast('Fichier téléchargé — vous pouvez maintenant le partager');
-      }
     });
 
     window.addEventListener('beforeinstallprompt', event => { event.preventDefault(); installPrompt = event; });

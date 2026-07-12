@@ -1,4 +1,4 @@
-const CACHE = 'brasserie-horaires-v2';
+const CACHE = 'brasserie-horaires-v3';
 const FILES = ['./', './index.html', './manifest.webmanifest', './brasserie-logo.png'];
 
 self.addEventListener('install', event => {
